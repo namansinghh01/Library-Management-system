@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Authors | Libraria{% endblock %}
+{% block header %}Author Management{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-semibold text-gray-800">All Authors</h2>
+    <a href="{{ url_for('author.add_author') }}"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm inline-flex items-center">
+        <i class="fa-solid fa-plus mr-2"></i> Add New Author
+    </a>
+</div>
+
+<!-- Authors Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {% for author in authors %}
+    <div
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+
+        <!-- Header Profile Background -->
+        <div
+            class="h-28 bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-900/50 dark:to-indigo-900/50 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-[0.2] mix-blend-overlay"
+                style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 16px 16px;">
+            </div>
+            <div
+                class="absolute -bottom-10 left-6 h-20 w-20 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-md border-4 border-white dark:border-gray-800 z-10">
+                <i class="fa-solid fa-user-pen text-3xl text-indigo-400 dark:text-indigo-500"></i>
+            </div>
+            <span
+                class="absolute top-4 right-4 text-xs font-mono text-white/90 font-bold bg-black/20 p-1.5 px-2.5 rounded-lg shadow-sm backdrop-blur-sm"><i
+                    class="fa-solid fa-hashtag mr-1 text-white/60"></i>{{ author.id }}</span>
+        </div>
+
+        <!-- Details -->
+        <div class="pt-14 px-6 pb-6 flex-1 flex flex-col bg-white dark:bg-gray-800">
+            <h3 class="font-bold text-gray-800 dark:text-gray-100 text-xl leading-snug mb-3">{{ author.name }}</h3>
+
+            {% if author.bio %}
+            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mb-5 flex-1 line-clamp-4 relative z-0">
+                <i class="fa-solid fa-quote-left text-2xl absolute -top-1 -left-1 opacity-10 dark:opacity-5 -z-10"></i>
+                {{ author.bio }}
+            </p>
+            {% else %}
+            <p class="text-sm text-gray-400 dark:text-gray-600 font-medium mb-5 flex-1 italic relative z-0">
+                <i class="fa-solid fa-quote-left text-2xl absolute -top-1 -left-1 opacity-10 dark:opacity-5 -z-10"></i>
+                No biography provided for this author.
+            </p>
+            {% endif %}
+
+            <div class="mt-auto border-t border-gray-50 dark:border-gray-700/50 pt-4 flex justify-between items-center">
+                <span
+                    class="text-xs text-indigo-500 dark:text-indigo-400 font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded-md border border-indigo-100 dark:border-indigo-800/30"><i
+                        class="fa-solid fa-feather-pointed mr-1"></i> Author</span>
+
+                <form action="{{ url_for('author.delete_author', id=author.id) }}" method="POST" class="inline"
+                    onsubmit="return confirm('Are you sure you want to delete this author?');">
+                    <button type="submit"
+                        class="text-red-500 hover:text-white bg-red-50 dark:bg-red-900/20 hover:bg-red-500 py-1.5 px-3 rounded-lg text-sm font-bold transition-all border border-red-100 dark:border-red-900/30 shadow-sm flex items-center">
+                        <i class="fa-solid fa-trash-can mr-1.5"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div
+        class="col-span-full py-20 px-4 text-center bg-white dark:bg-gray-800 rounded-3xl border border-dashed border-gray-300 dark:border-gray-600 shadow-sm">
+        <div
+            class="h-24 w-24 mx-auto bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-4xl mb-6 shadow-inner">
+            <i class="fa-solid fa-users-slash"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">No authors registered</h3>
+        <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-sm mx-auto">There are no authors in the system yet. Add
+            the first one!</p>
+        <a href="{{ url_for('author.add_author') }}"
+            class="inline-flex items-center bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/30 transform hover:-translate-y-1">
+            <i class="fa-solid fa-plus mr-2"></i> Register First Author
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

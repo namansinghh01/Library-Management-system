@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | Libraria{% endblock %}
+{% block header %}Overview Dashboard{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+    <!-- Statistic Card 1 -->
+    <div
+        class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between transform transition hover:-translate-y-1 hover:shadow-md">
+        <div>
+            <p class="text-gray-500 text-sm font-medium mb-1">Total Books</p>
+            <h3 class="text-3xl font-bold text-gray-800">{{ total_books }}</h3>
+        </div>
+        <div class="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-2xl">
+            <i class="fa-solid fa-book"></i>
+        </div>
+    </div>
+
+    <!-- Statistic Card 2 -->
+    <div
+        class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between transform transition hover:-translate-y-1 hover:shadow-md">
+        <div>
+            <p class="text-gray-500 text-sm font-medium mb-1">Total Students</p>
+            <h3 class="text-3xl font-bold text-gray-800">{{ total_students }}</h3>
+        </div>
+        <div class="h-14 w-14 rounded-full bg-green-50 flex items-center justify-center text-green-600 text-2xl">
+            <i class="fa-solid fa-user-graduate"></i>
+        </div>
+    </div>
+
+    <!-- Statistic Card 3 -->
+    <div
+        class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between transform transition hover:-translate-y-1 hover:shadow-md">
+        <div>
+            <p class="text-gray-500 text-sm font-medium mb-1">Total Authors</p>
+            <h3 class="text-3xl font-bold text-gray-800">{{ total_authors }}</h3>
+        </div>
+        <div class="h-14 w-14 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 text-2xl">
+            <i class="fa-solid fa-feather-pointed"></i>
+        </div>
+    </div>
+
+    <!-- Statistic Card 4 -->
+    <div
+        class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between transform transition hover:-translate-y-1 hover:shadow-md">
+        <div>
+            <p class="text-gray-500 text-sm font-medium mb-1">Active Issues</p>
+            <h3 class="text-3xl font-bold text-gray-800">{{ active_issues }}</h3>
+        </div>
+        <div class="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center text-red-600 text-2xl">
+            <i class="fa-solid fa-hand-holding-hand"></i>
+        </div>
+    </div>
+
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Recent Transactions -->
+    <div
+        class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+        <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
+            <h3 class="font-semibold text-gray-800">Recent Transactions</h3>
+            <a href="{{ url_for('transactions.list_transactions') }}"
+                class="text-sm font-medium text-indigo-600 hover:text-indigo-800">View All &rarr;</a>
+        </div>
+
+        <div class="overflow-x-auto flex-1">
+            <table class="w-full whitespace-nowrap h-full">
+                <thead
+                    class="bg-gray-50 text-gray-500 text-xs font-semibold uppercase tracking-wider text-left sticky top-0">
+                    <tr>
+                        <th class="px-6 py-4">Student</th>
+                        <th class="px-6 py-4">Book</th>
+                        <th class="px-6 py-4">Issue Date</th>
+                        <th class="px-6 py-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-sm">
+                    {% for tx in recent_transactions %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 font-medium">{{ tx.student.stu_name }}</td>
+                        <td class="px-6 py-4 text-gray-600">{{ tx.book.title }}</td>
+                        <td class="px-6 py-4 text-gray-500">{{ tx.issue_date.strftime('%Y-%m-%d') }}</td>
+                        <td class="px-6 py-4">
+                            {% if tx.status == 'issued' %}
+                            <span
+                                class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Active</span>
+                            {% else %}
+                            <span
+                                class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Returned</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">No recent transactions.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Chart (Col Span 1) -->
+    {% if session.get('role') == 'admin' %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
+        <h3 class="font-semibold text-gray-800 mb-6 px-1">Books by Category</h3>
+        <div class="flex-1 relative min-h-[250px] w-full flex items-center justify-center">
+
+            {% if chart_data and chart_data|length > 0 %}
+            <canvas id="categoryChart"></canvas>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    var ctx = document.getElementById('categoryChart').getContext('2d');
+                    var myChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: {{ chart_labels | tojson | safe }},
+                    datasets: [{
+                        data: {{ chart_data | tojson | safe }},
+                    backgroundColor: [
+                        '#4f46e5', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#06b6d4'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                            }]
+                        },
+                    options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                color: '#4b5563',
+                                font: { family: "'Outfit', sans-serif", size: 12 }
+                            }
+                        }
+                    },
+                    cutout: '72%'
+                }
+                    });
+                });
+            </script>
+            {% else %}
+            <div class="text-center text-gray-400">
+                <i class="fa-solid fa-chart-pie text-4xl mb-3 block opacity-50"></i>
+                <p class="text-sm">Not enough data to display chart.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

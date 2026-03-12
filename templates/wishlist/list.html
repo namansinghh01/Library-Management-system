@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}My Wishlist | Libraria{% endblock %}
+{% block header %}My Wishlist <i class="fa-solid fa-heart text-red-500 ml-2"></i>{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {% for item in wishlists %}
+    <div
+        class="book-card bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full group">
+
+        <!-- Top Status Bar -->
+        <div
+            class="px-5 py-3 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
+            <span class="text-xs font-mono text-gray-400 dark:text-gray-500 flex items-center"><i
+                    class="fa-regular fa-clock mr-1"></i> Saved on {{ item.added_date.strftime('%Y-%m-%d') }}</span>
+            <form action="{{ url_for('wishlist.remove_from_wishlist', id=item.id) }}" method="POST"
+                onsubmit="return confirm('Remove from wishlist?');">
+                <button type="submit" class="text-gray-400 hover:text-red-500 transition-colors p-1" title="Remove">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Book Image / Icon Placeholder -->
+        <div
+            class="h-44 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 flex flex-col items-center justify-center relative overflow-hidden shrink-0">
+            <div class="absolute inset-0 opacity-[0.4] mix-blend-overlay pointer-events-none"
+                style="background-image: radial-gradient(#6366f1 1px, transparent 1px); background-size: 16px 16px;">
+            </div>
+            <i
+                class="fa-solid fa-book-journal-whills text-6xl text-indigo-300 dark:text-indigo-600/50 group-hover:scale-110 transition-transform duration-500 ease-out drop-shadow-md"></i>
+            {% if item.book.category %}
+            <span
+                class="absolute bottom-3 left-3 px-3 py-1.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap z-10 border border-white/20 dark:border-gray-600/30">{{
+                item.book.category }}</span>
+            {% endif %}
+        </div>
+
+        <!-- Book Details -->
+        <div class="p-5 flex-1 flex flex-col">
+            <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold text-gray-800 dark:text-gray-100 text-xl leading-tight line-clamp-2 book-title">{{
+                    item.book.title }}</h3>
+            </div>
+
+            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mb-3 flex items-center book-author">
+                <i class="fa-solid fa-feather-pointed mr-2 opacity-70"></i> {{ item.book.author.name }}
+            </p>
+
+            <div class="mt-auto pt-4 border-t border-gray-50 dark:border-gray-700/50">
+                <div class="flex items-center justify-between text-xs mb-4">
+                    {% if item.book.available_copies > 0 %}
+                    <span
+                        class="px-2.5 py-1 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 rounded-full text-xs font-bold flex items-center"><i
+                            class="fa-solid fa-circle text-[8px] mr-1.5 animate-pulse"></i> {{
+                        item.book.available_copies }} left</span>
+                    {% else %}
+                    <span
+                        class="px-2.5 py-1 bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 rounded-full text-xs font-bold flex items-center"><i
+                            class="fa-solid fa-xmark mr-1"></i> Taken</span>
+                    {% endif %}
+                </div>
+
+                {% if item.book.available_copies > 0 %}
+                <form action="{{ url_for('transactions.issue_book') }}" method="POST">
+                    <input type="hidden" name="book_id" value="{{ item.book.id }}">
+                    <button type="submit"
+                        class="w-full flex justify-center items-center bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md shadow-indigo-600/20 hover:shadow-lg hover:shadow-indigo-600/30 transform active:scale-95 tracking-wide">
+                        Issue Book Now
+                    </button>
+                </form>
+                {% else %}
+                <form action="{{ url_for('requests.request_existing', book_id=item.book.id) }}" method="POST">
+                    <button type="submit"
+                        class="w-full flex justify-center items-center bg-yellow-500 hover:bg-yellow-600 text-white dark:bg-yellow-600 dark:hover:bg-yellow-500 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md shadow-yellow-500/20 hover:shadow-lg hover:shadow-yellow-500/30 transform active:scale-95 tracking-wide">
+                        Waitlist Request
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div
+        class="col-span-full py-20 px-4 text-center bg-white dark:bg-gray-800 rounded-3xl border border-dashed border-gray-300 dark:border-gray-600 shadow-sm">
+        <div
+            class="h-24 w-24 mx-auto bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center text-indigo-400 text-4xl mb-6 shadow-inner">
+            <i class="fa-regular fa-bookmark"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">Your wishlist is empty</h3>
+        <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-sm mx-auto">Save books you want to read later. They'll
+            appear right here.</p>
+        <a href="{{ url_for('book.list_books') }}"
+            class="inline-flex items-center bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/30 transform hover:-translate-y-1">
+            Browse Books <i class="fa-solid fa-arrow-right ml-2"></i>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

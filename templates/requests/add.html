@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Request New Book | Libraria{% endblock %}
+{% block header %}Request New Book{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-md border border-gray-100">
+    <div class="mb-8 border-b pb-6 border-indigo-50">
+        <h2 class="text-2xl font-bold text-gray-800">Suggest a New Book</h2>
+        <p class="text-gray-500 mt-2">If you cannot find a book in our library, you can request the admin to add it.</p>
+    </div>
+
+    <form action="{{ url_for('requests.add_request') }}" method="POST" class="space-y-5">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Book Title <span
+                    class="text-red-500">*</span></label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fa-solid fa-book text-gray-400"></i>
+                </div>
+                <input type="text" name="title" required
+                    class="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    placeholder="Enter the book title">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Author Name <span
+                    class="text-red-500">*</span></label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fa-solid fa-feather-pointed text-gray-400"></i>
+                </div>
+                <input type="text" name="author" required
+                    class="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    placeholder="Enter author's name">
+            </div>
+        </div>
+
+        <div class="pt-4 flex items-center justify-end space-x-3 border-t border-gray-50 mt-6">
+            <a href="{{ url_for('requests.list_requests') }}"
+                class="px-5 py-2.5 text-gray-600 font-medium hover:text-gray-800 transition-colors">Cancel</a>
+            <button type="submit"
+                class="bg-indigo-600 text-white font-medium py-2.5 px-6 rounded-lg hover:bg-indigo-700 transition-colors shadow flex items-center">
+                <i class="fa-solid fa-paper-plane mr-2"></i> Submit Request
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

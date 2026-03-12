@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Students | Libraria{% endblock %}
+{% block header %}Student Management{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-semibold text-gray-800">Enrolled Students</h2>
+    <a href="{{ url_for('student.add_student') }}"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm inline-flex items-center">
+        <i class="fa-solid fa-plus mr-2"></i> Register Student
+    </a>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full whitespace-nowrap">
+            <thead class="bg-gray-50 text-gray-500 text-xs font-semibold uppercase tracking-wider text-left">
+                <tr>
+                    <th class="px-6 py-4">ID</th>
+                    <th class="px-6 py-4">Name</th>
+                    <th class="px-6 py-4">Email</th>
+                    <th class="px-6 py-4">Phone</th>
+                    <th class="px-6 py-4">Age</th>
+                    <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                {% for student in students %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 text-gray-500 font-medium">#{{ student.id }}</td>
+                    <td class="px-6 py-4 font-semibold text-gray-800">{{ student.stu_name }}</td>
+                    <td class="px-6 py-4 text-gray-500">{{ student.stu_email }}</td>
+                    <td class="px-6 py-4 text-gray-500">{{ student.stu_phone }}</td>
+                    <td class="px-6 py-4 text-gray-500">{{ student.stu_age }}</td>
+                    <td class="px-6 py-4 text-right">
+                        <form action="{{ url_for('student.delete_student', id=student.id) }}" method="POST"
+                            class="inline" onsubmit="return confirm('Remove this student?');">
+                            <button type="submit"
+                                class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md transition-colors">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">No students registered yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

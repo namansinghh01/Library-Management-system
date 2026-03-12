@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}Transactions | Libraria{% endblock %}
+{% block header %}Transactions Management{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-semibold text-gray-800">Issue & Return History</h2>
+    <a href="{{ url_for('transactions.issue_book') }}"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm inline-flex items-center">
+        <i class="fa-solid fa-hand-holding-hand mr-2"></i> Issue Book
+    </a>
+</div>
+
+<!-- Transactions Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {% for tx in transactions %}
+    <div
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group relative">
+
+        <!-- Header: TX ID & Status -->
+        <div
+            class="px-5 py-3 border-b border-gray-50 dark:border-gray-700/80 flex justify-between items-center bg-gray-50/80 dark:bg-gray-800/80 shrink-0">
+            <span class="text-xs font-mono text-indigo-600 dark:text-indigo-400 font-bold"><i
+                    class="fa-solid fa-receipt mr-1"></i> TX-{{ tx.id }}</span>
+            {% if tx.status == 'issued' %}
+            {% if tx.is_overdue %}
+            <span
+                class="px-2.5 py-1 bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400 rounded-full text-xs font-bold animate-pulse tracking-wide shadow-sm"><i
+                    class="fa-solid fa-triangle-exclamation mr-1"></i> Overdue</span>
+            {% else %}
+            <span
+                class="px-2.5 py-1 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400 rounded-full text-xs font-bold tracking-wide shadow-sm"><i
+                    class="fa-regular fa-clock mr-1"></i> Issued</span>
+            {% endif %}
+            {% else %}
+            <span
+                class="px-2.5 py-1 bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400 rounded-full text-xs font-bold tracking-wide shadow-sm"><i
+                    class="fa-solid fa-check mr-1"></i> Returned</span>
+            {% endif %}
+        </div>
+
+        <!-- Book Icon Info Area -->
+        <div
+            class="h-32 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 flex flex-col items-center justify-center relative overflow-hidden shrink-0">
+            <div class="absolute top-0 right-0 p-2 opacity-10 dark:opacity-5 text-4xl">
+                <i class="fa-solid fa-book"></i>
+            </div>
+            <h3
+                class="font-bold text-gray-800 dark:text-gray-100 text-xl leading-snug px-4 text-center z-10 line-clamp-2 mt-4">
+                {{ tx.book.title }}</h3>
+            <p class="text-xs text-indigo-500 font-medium z-10 mt-1 mb-4"><i
+                    class="fa-solid fa-user-graduate mr-1 opacity-75"></i> By {{ tx.student.stu_name }}</p>
+        </div>
+
+        <!-- Details -->
+        <div class="p-5 flex-1 flex flex-col bg-white dark:bg-gray-800">
+            <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                <div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wider mb-1"><i
+                            class="fa-regular fa-calendar-check mr-1"></i> Issue Date</p>
+                    <p class="text-gray-700 dark:text-gray-300 font-medium">{{ tx.issue_date.strftime('%Y-%m-%d') }}</p>
+                </div>
+                <div>
+                    {% if tx.status == 'issued' %}
+                    <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wider mb-1"><i
+                            class="fa-regular fa-calendar-xmark mr-1"></i> Expected Due</p>
+                    <p
+                        class="text-gray-700 dark:text-gray-300 font-medium {% if tx.is_overdue %}text-red-500 dark:text-red-400{% endif %}">
+                        {{ tx.due_date_calc.strftime('%Y-%m-%d') if tx.due_date_calc else 'N/A' }}
+                    </p>
+                    {% else %}
+                    <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wider mb-1"><i
+                            class="fa-solid fa-arrow-rotate-left mr-1"></i> Return Date</p>
+                    <p class="text-gray-700 dark:text-gray-300 font-medium">{{ tx.return_date.strftime('%Y-%m-%d') if
+                        tx.return_date else 'N/A' }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if tx.calculate_fine > 0 %}
+            <div
+                class="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-3 py-2 rounded-lg text-sm font-bold flex justify-between items-center mb-4 border border-red-100 dark:border-red-900/30">
+                <span><i class="fa-solid fa-money-bill-wave mr-2"></i> Pending Fine</span>
+                <span>₹{{ tx.calculate_fine }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Actions block -->
+            <div
+                class="mt-auto border-t border-gray-100 dark:border-gray-700 pt-4 flex items-center justify-between gap-2">
+                {% if tx.status == 'issued' %}
+                <form action="{{ url_for('transactions.return_book', tx_id=tx.id) }}" method="POST" class="w-full"
+                    onsubmit="return confirm('Confirm returning this book?');">
+                    <button type="submit"
+                        class="w-full flex justify-center items-center bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-sm font-bold transition-all shadow-md shadow-indigo-600/20 transform active:scale-95">
+                        <i class="fa-solid fa-arrow-rotate-left mr-2"></i> Return Book
+                    </button>
+                </form>
+                {% else %}
+                <!-- For Returned state, show reviews -->
+                <div class="w-full">
+                    {% if session.get('role') == 'student' %}
+                    {% if tx.book.id in user_reviews %}
+                    <div
+                        class="flex justify-center flex-col items-center p-2 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1">Your Rating</span>
+                        <div class="flex text-yellow-400 text-sm">
+                            {% for i in range(user_reviews[tx.book.id].rating) %}
+                            <i class="fa-solid fa-star drop-shadow-sm"></i>
+                            {% endfor %}
+                            {% for i in range(5 - user_reviews[tx.book.id].rating) %}
+                            <i class="fa-regular fa-star text-gray-300 dark:text-gray-600"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <button onclick="openReviewModal({{ tx.book.id }}, '{{ tx.book.title|escape }}')"
+                        class="w-full flex justify-center items-center text-yellow-600 dark:text-yellow-500 hover:text-white bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-500 dark:hover:bg-yellow-600 py-2.5 rounded-xl text-sm font-bold transition-all border border-yellow-200 dark:border-yellow-700/50 shadow-sm shadow-yellow-500/10">
+                        <i class="fa-regular fa-star mr-2"></i> Rate this Book
+                    </button>
+                    {% endif %}
+                    {% else %}
+                    <div
+                        class="flex items-center justify-center p-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-xl font-bold text-sm w-full h-10 border border-green-100 dark:border-green-800/30">
+                        <i class="fa-solid fa-check-double mr-2"></i> Completed
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if session.get('role') == 'admin' %}
+                <form action="{{ url_for('transactions.delete_transaction', tx_id=tx.id) }}" method="POST"
+                    class="shrink-0" onsubmit="return confirm('Delete this record completely?');">
+                    <button type="submit"
+                        class="h-10 w-10 flex items-center justify-center text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-xl transition-colors border border-red-100 dark:border-red-900/30"
+                        title="Delete record">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div
+        class="col-span-full py-20 px-4 text-center bg-white dark:bg-gray-800 rounded-3xl border border-dashed border-gray-300 dark:border-gray-600 shadow-sm">
+        <div
+            class="h-24 w-24 mx-auto bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-4xl mb-6 shadow-inner">
+            <i class="fa-solid fa-receipt"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">No active transactions</h3>
+        <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-sm mx-auto">There are no issue or return records found in
+            your account.</p>
+        <a href="{{ url_for('transactions.issue_book') }}"
+            class="inline-flex items-center bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/30 transform hover:-translate-y-1">
+            <i class="fa-solid fa-check mr-2"></i> Issue a Book
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden transform transition-all">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800 text-lg">Rate & Review</h3>
+            <button onclick="closeReviewModal()" class="text-gray-400 hover:text-red-500 transition-colors">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <div class="p-6">
+            <p id="modalBookTitle" class="text-indigo-600 font-medium text-sm mb-4"></p>
+            <form id="reviewForm" method="POST" action="">
+                <div class="mb-5 flex flex-col items-center">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">How would you rate this book?</label>
+                    <div class="flex items-center gap-1 text-2xl text-gray-300 review-stars cursor-pointer">
+                        <i class="fa-solid fa-star hover:text-yellow-400" data-val="1"></i>
+                        <i class="fa-solid fa-star hover:text-yellow-400" data-val="2"></i>
+                        <i class="fa-solid fa-star hover:text-yellow-400" data-val="3"></i>
+                        <i class="fa-solid fa-star hover:text-yellow-400" data-val="4"></i>
+                        <i class="fa-solid fa-star hover:text-yellow-400" data-val="5"></i>
+                    </div>
+                </div>
+                <input type="hidden" name="rating" id="reviewRatingInput" value="" required>
+
+                <div class="mb-5">
+                    <label for="comment" class="block text-sm font-medium text-gray-700 mb-1">Write a short review
+                        (Optional)</label>
+                    <textarea name="comment" id="comment" rows="3"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all resize-none"
+                        placeholder="What did you like or dislike?"></textarea>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm">
+                    Submit Review
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openReviewModal(bookId, title) {
+        document.getElementById('modalBookTitle').innerText = title;
+        document.getElementById('reviewForm').action = "/reviews/add/" + bookId;
+
+        // Reset modal
+        document.getElementById('reviewRatingInput').value = "";
+        document.getElementById('comment').value = "";
+        updateStars(0);
+
+        document.getElementById('reviewModal').classList.remove('hidden');
+    }
+
+    function closeReviewModal() {
+        document.getElementById('reviewModal').classList.add('hidden');
+    }
+
+    // Star rating logic
+    const stars = document.querySelectorAll('.review-stars i');
+    let currentRating = 0;
+
+    function updateStars(val) {
+        stars.forEach(star => {
+            if (parseInt(star.getAttribute('data-val')) <= val) {
+                star.classList.add('text-yellow-400');
+                star.classList.remove('text-gray-300');
+            } else {
+                star.classList.remove('text-yellow-400');
+                star.classList.add('text-gray-300');
+            }
+        });
+    }
+
+    stars.forEach(star => {
+        star.addEventListener('mouseover', function () {
+            updateStars(parseInt(this.getAttribute('data-val')));
+        });
+
+        star.addEventListener('mouseout', function () {
+            updateStars(currentRating);
+        });
+
+        star.addEventListener('click', function () {
+            currentRating = parseInt(this.getAttribute('data-val'));
+            document.getElementById('reviewRatingInput').value = currentRating;
+            updateStars(currentRating);
+        });
+    });
+</script>
+{% endblock %}
